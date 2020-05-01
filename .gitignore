@@ -2,3 +2,7 @@ main
 rsa
 *.so
 *.dll
+
+*.pdb
+*.ilk
+*.exe
