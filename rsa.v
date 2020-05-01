@@ -20,45 +20,59 @@ fn gen_rsa_key(max_len int) (PublicKey, PrivateKey) {
 	p := math.get_rand_prime(max_len) or { panic(err) }
 	q := math.get_rand_prime(max_len) or { panic(err) }
 	n := p*q
-	o := (p-1)*(q-1)
-	mut e := u64(0)
+	phi := (p-1)*(q-1)
+	mut e := 3
 	for {
-		l := rand.int_u64(o) or { panic(err) }
-		if l > 1 && l < o {
-			e = l
-			break
+		if e < phi {
+			if math.gcd(e, phi) == 1 {
+				break
+			} else {
+				e++
+			}
 		}
 	}
-	k := rand.int_u64(max_len) or { panic(err) }
-	d := (k*o + 1) / e
-		
+	/*a, d, b := math.ggt(e, phi)
+	println(a)
+	println(d)
+	println(b)*/
+	mut d := u64(0)
+	for i := 0; i < phi; i++ {
+		if i * e % phi == 1 {
+			d = i
+		}
+	}
 	return PublicKey{e, n}, PrivateKey{d, n}
 }
 
-fn (key PublicKey) encrypt_data(data []byte) []byte {
-	mut v := ''
-	for x in data {
-		v += int(x).str()
-	}
-	c := (v.u64() ^ key.e) % key.n
-	return c.str().bytes()
+fn (key PublicKey) encrypt(data u64) u64 {
+	c := (data ^ key.e) % key.n
+	return c
 }
 
-fn (key PrivateKey) decrypt_data(data []byte) []byte {
-	mut v := ''
-	for x in data {
-		v += int(x).str()
-	}
-	c := (v.u64() ^ key.d) % key.n
-	return c.str().bytes()
+
+fn (key PrivateKey) decrypt(data u64) u64 {
+	c := (data ^ key.d) % key.n
+	return c
 }
 
 fn main() {
-	pub_key, priv_key := gen_rsa_key(512)
-	a := 50
-	println(a)
-	encrypted := (a^pub_key.e) % pub_key.n
-	println(encrypted)
-	decrypted := (encrypted^priv_key.d) % priv_key.n
-	println(decrypted)
+	pub_key, priv_key := gen_rsa_key(1024)
+
+	/*pub_key = PublicKey{
+		n: 3233,
+
+	}*/
+
+	println(pub_key)
+	println(priv_key)
+
+
+	z := 99
+
+	/*println(math.modulo_i(math.pow_i(z, pub_key.e), pub_key.n))*/
+	//c := math.modulo_i(math.pow_i(z, pub_key.e), pub_key.n)
+	//o := math.modulo_i(math.pow_i(c, priv_key.d), priv_key.n)
+	c := pub_key.encrypt(z)
+	o := priv_key.decrypt(z)
+	println('Orginal zahl $z wurde zu $c und danach zu $o')
 }
